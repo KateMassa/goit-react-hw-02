@@ -1,15 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Description from "./Description/Description";
 import Feedback from "./Feedback/Feedback";
 import Options from "./Options/Options";
 import Notification from "./Notification/Notification";
 
 const App = () => {
-  const [feedback, setFeedback] = useState({
+  const initialState = {
     good: 0,
     neutral: 0,
     bad: 0,
-  });
+  };
+
+  const [feedback, setFeedback] = useState(initialState);
+
+  useEffect(() => {
+    const savedFeedback = localStorage.getItem("feedback");
+    if (savedFeedback) {
+      setFeedback(JSON.parse(savedFeedback));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("feedback", JSON.stringify(feedback));
+  }, [feedback]);
 
   const updateFeedback = (feedbackType) => {
     setFeedback({
@@ -19,13 +32,29 @@ const App = () => {
   };
 
   const totalFeedback = feedback.good + feedback.neutral + feedback.bad;
+  const positivePercentage =
+    totalFeedback > 0
+      ? Math.round(((feedback.good + feedback.neutral) / totalFeedback) * 100)
+      : 0;
+
+  const resetFeedback = () => {
+    setFeedback(initialState);
+  };
 
   return (
-    <div>
+    <div className="container">
       <Description />
-      <Options updateFeedback={updateFeedback} />
+      <Options
+        updateFeedback={updateFeedback}
+        totalFeedback={totalFeedback}
+        resetFeedback={resetFeedback}
+      />
       {totalFeedback > 0 ? (
-        <Feedback feedback={feedback} totalFeedback={totalFeedback} />
+        <Feedback
+          feedback={feedback}
+          totalFeedback={totalFeedback}
+          positivePercentage={positivePercentage}
+        />
       ) : (
         <Notification message="No feedback gathered yet." />
       )}
